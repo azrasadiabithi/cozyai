@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CozyAI - Your Study Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    
+    <style>
+        :root { 
+            --bg: #fdfbf7; --card-bg: #ffffff; --text-main: #4a3f35; --text-light: #8a7b6b;
+            --primary: #d4a373; --primary-hover: #c28b56; --secondary: #faedcd; --border: #f0e6d2;
+            --timer-focus: #e07a5f; --timer-break: #81b29a; --shadow: 0 8px 24px rgba(74, 63, 53, 0.08);
+            --danger: #ef4444; --chat-user: #e0e7ff; --chat-ai: #f3f4f6; --success: #10b981;
+        }
+        body.theme-forest {
+            --bg: #f0f4f1; --card-bg: #ffffff; --text-main: #2d3a30; --text-light: #6b7c71;
+            --primary: #5c8d68; --primary-hover: #4a7554; --secondary: #e3ece5; --border: #d1e0d4;
+            --timer-focus: #c96f53; --timer-break: #7a9c85; --chat-user: #dcfce7; --chat-ai: #f3f4f6;
+        }
+        body.theme-night {
+            --bg: #1a1a24; --card-bg: #242433; --text-main: #e2e2e8; --text-light: #9ba1b5;
+            --primary: #8b7cf6; --primary-hover: #7161e8; --secondary: #2f2f44; --border: #3a3a52;
+            --timer-focus: #f07a7a; --timer-break: #5ac99d; --shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            --chat-user: #4338ca; --chat-ai: #374151;
+        }
+
+        body { font-family: 'Nunito', sans-serif; background-color: var(--bg); color: var(--text-main); padding: 20px; margin: 0; transition: all 0.4s ease; overflow-x: hidden; }
+        .container { max-width: 1000px; margin: 0 auto; background: var(--card-bg); padding: 30px 40px; border-radius: 24px; box-shadow: var(--shadow); transition: all 0.4s ease; position: relative; z-index: 10; min-height: 80vh; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
+        h1 { color: var(--primary); margin: 0 0 5px 0; font-size: 2.2rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        p.subtitle { color: var(--text-light); margin: 0; font-size: 1.1rem; }
+        
+        .controls-group { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .vibe-selector { display: flex; gap: 10px; background: var(--secondary); padding: 8px; border-radius: 50px; }
+        .vibe-btn { background: transparent; border: none; cursor: pointer; padding: 8px 16px; border-radius: 50px; font-family: inherit; font-weight: 700; color: var(--text-light); transition: 0.2s; }
+        .vibe-btn.active { background: var(--card-bg); color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+
+        .color-picker-wrapper { display: flex; align-items: center; gap: 8px; background: var(--secondary); padding: 8px 15px; border-radius: 50px; font-weight: 700; font-size: 14px; color: var(--text-light); }
+        input[type="color"] { border: none; width: 25px; height: 25px; border-radius: 50%; cursor: pointer; background: transparent; padding: 0; }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: 2px solid white; border-radius: 50%; }
+
+        .tabs { display: flex; gap: 15px; margin-bottom: 30px; justify-content: center; flex-wrap: wrap; }
+        .tab-btn { background: var(--secondary); border: 2px solid transparent; font-family: inherit; font-size: 16px; font-weight: 800; color: var(--text-light); cursor: pointer; padding: 12px 24px; border-radius: 50px; transition: 0.3s; }
+        .tab-btn:hover { background: var(--border); }
+        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .tab-content { display: none; animation: fadeIn 0.4s ease; }
+        .tab-content.active { display: block; }
+
+        .layout-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        @media(max-width: 800px) { .layout-2col { grid-template-columns: 1fr; } }
+
+        .panel { background: var(--bg); border: 2px solid var(--border); border-radius: 20px; padding: 25px; display: flex; flex-direction: column; }
+        .panel h3 { margin-top: 0; color: var(--primary); font-size: 1.3rem; display: flex; align-items: center; gap: 8px; }
+
+        textarea, input[type="text"], input[type="number"] { width: 100%; padding: 15px; border: 2px solid var(--border); border-radius: 12px; font-size: 15px; box-sizing: border-box; font-family: inherit; background: var(--card-bg); color: var(--text-main); margin-bottom: 15px; transition: 0.3s; }
+        textarea { height: 120px; resize: none; }
+        textarea:focus, input[type="text"]:focus, input[type="number"]:focus { outline: none; border-color: var(--primary); }
+        
+        button.action-btn { padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; transition: 0.2s; font-family: inherit; background: var(--primary); color: white; width: 100%; }
+        button.action-btn:hover { background: var(--primary-hover); transform: translateY(-2px); }
+        
+        #outputArea { margin-top: 15px; display: none; background: var(--card-bg); padding: 20px; border-radius: 12px; white-space: pre-wrap; font-size: 15px; border-left: 5px solid var(--primary); max-height: 300px; overflow-y: auto; }
+
+        .chat-history { flex-grow: 1; height: 300px; overflow-y: auto; background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 15px; border: 2px solid var(--border); }
+        .message { padding: 12px 18px; border-radius: 16px; font-size: 15px; max-width: 85%; line-height: 1.5; }
+        .msg-user { background: var(--chat-user); color: var(--text-main); align-self: flex-end; border-bottom-right-radius: 4px; }
+        .msg-ai { background: var(--chat-ai); color: var(--text-main); align-self: flex-start; border-bottom-left-radius: 4px; }
+        .chat-input-area { display: flex; gap: 10px; }
+        .chat-input-area button { background: var(--primary); color: white; border: none; border-radius: 12px; padding: 0 25px; font-weight: 800; font-size: 16px; cursor: pointer; transition: 0.2s; }
+
+        .timer-card { text-align: center; justify-content: center; align-items: center; padding: 40px 25px; }
+        .timer-display { font-size: 6rem; font-weight: 800; margin: 10px 0; color: var(--text-main); font-variant-numeric: tabular-nums; line-height: 1; }
+        .timer-mode { font-size: 1rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; padding: 8px 20px; border-radius: 50px; margin-bottom: 20px; display: inline-block;}
+        .mode-focus { color: var(--timer-focus); background: rgba(224, 122, 95, 0.1); }
+        .mode-break { color: var(--timer-break); background: rgba(129, 178, 154, 0.15); }
+        .timer-controls { display: flex; gap: 15px; width: 100%; max-width: 300px; margin-bottom: 20px;}
+        .btn-timer { padding: 15px; font-size: 16px; font-weight: 800; border-radius: 12px; cursor: pointer; border: none; transition: 0.2s; flex: 1; font-family: inherit; }
+        .btn-start { background: var(--primary); color: white; }
+        .btn-reset { background: var(--secondary); color: var(--text-main); }
+
+        .ambient-box { background: var(--card-bg); border: 2px solid var(--border); border-radius: 15px; padding: 15px; text-align: center; width: 100%; box-sizing: border-box; }
+        .sound-btn { background: var(--secondary); border: none; padding: 10px 20px; border-radius: 50px; font-weight: 800; color: var(--text-main); cursor: pointer; transition: 0.2s; font-family: inherit; width: 100%;}
+        .sound-btn.playing { background: var(--primary); color: white; }
+        #mantraDisplay { font-size: 1.2rem; font-weight: 800; color: var(--primary); font-style: italic; margin-top: 15px; text-align: center; transition: opacity 0.5s; }
+
+        .goal-list { list-style: none; padding: 0; margin: 0 0 15px 0; max-height: 200px; overflow-y: auto; }
+        .goal-list li { padding: 12px 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-weight: 600; background: var(--card-bg); border-radius: 10px; margin-bottom: 8px; }
+        .goal-list li.completed { text-decoration: line-through; opacity: 0.5; }
+        .delete-btn { background: var(--danger); color: white; border: none; border-radius: 6px; padding: 5px 10px; cursor: pointer; font-weight: bold; font-size: 12px; }
+        
+        .progress-container { background: var(--card-bg); border: 2px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: center; font-weight: 800; font-size: 1.2rem; }
+        .progress-bar-bg { width: 100%; height: 15px; background: var(--secondary); border-radius: 10px; overflow: hidden; margin-top: 10px; }
+        .progress-bar-fill { height: 100%; background: var(--timer-break); width: 0%; transition: width 0.5s ease; }
+
+        .quiz-option { background: var(--card-bg); border: 2px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .quiz-option:hover { border-color: var(--primary); }
+        .quiz-option.correct { background: #dcfce7; border-color: var(--success); color: #166534; }
+        .quiz-option.wrong { background: #fee2e2; border-color: var(--danger); color: #991b1b; animation: shake 0.4s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        #examOutput { display: none; }
+
+        .upload-btn-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; margin-bottom: 15px; }
+        .btn-upload { border: 2px dashed var(--primary); color: var(--primary); background-color: var(--card-bg); padding: 10px 20px; border-radius: 12px; font-size: 14px; font-weight: 800; width: 100%; cursor: pointer; transition: 0.3s; }
+        .btn-upload:hover { background-color: var(--secondary); }
+        .upload-btn-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+
+        .scene-container { position: fixed; bottom: 20px; right: 20px; width: 250px; height: 250px; pointer-events: none; z-index: 1; opacity: 0.8; }
+        @media(max-width: 900px) { .scene-container { display: none; } }
+        .cafe-scene, .forest-scene, .night-scene { display: none; position: absolute; width: 100%; height: 100%; }
+        .theme-cafe .cafe-scene { display: block; }
+        .theme-forest .forest-scene { display: block; }
+        .theme-night .night-scene { display: block; }
+        .coffee-cup { position: absolute; bottom: 0; right: 50px; font-size: 80px; animation: float 3s ease-in-out infinite; }
+        .steam { position: absolute; bottom: 80px; right: 80px; width: 10px; height: 30px; background: rgba(255,255,255,0.6); border-radius: 50%; filter: blur(4px); animation: steam 2s linear infinite; }
+        .steam:nth-child(2) { right: 65px; animation-delay: 0.5s; height: 40px; }
+        @keyframes steam { 0% { transform: translateY(0) scale(1); opacity: 0.8; } 100% { transform: translateY(-40px) scale(2); opacity: 0; } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .firefly { position: absolute; bottom: 50px; right: 100px; width: 8px; height: 8px; background: #a3e635; border-radius: 50%; box-shadow: 0 0 15px 5px #a3e635; animation: fly 6s linear infinite; }
+        .grass { position: absolute; bottom: 0; right: 30px; font-size: 60px; transform-origin: bottom center; animation: sway 3s ease-in-out infinite; }
+        .grass2 { position: absolute; bottom: 0; right: 90px; font-size: 50px; transform-origin: bottom center; animation: sway 4s ease-in-out infinite reverse; }
+        @keyframes fly { 0% { transform: translate(0, 0); opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translate(-80px, -100px); opacity: 0; } }
+        @keyframes sway { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+        .star { position: absolute; background: white; border-radius: 50%; animation: twinkle 2s infinite alternate; }
+        .star1 { width: 4px; height: 4px; top: 20px; right: 30px; }
+        .star2 { width: 3px; height: 3px; top: 80px; right: 120px; animation-delay: 0.5s; }
+        .star3 { width: 5px; height: 5px; top: 50px; right: 180px; animation-delay: 1s; }
+        .owl { position: absolute; bottom: 80px; right: 50px; font-size: 60px; animation: flyOwl 8s ease-in-out infinite; }
+        @keyframes twinkle { 0% { opacity: 0.3; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1.2); } }
+        @keyframes flyOwl { 0%, 100% { transform: translate(0, 0) rotate(0deg); } 50% { transform: translate(-50px, -30px) rotate(-10deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="theme-cafe">
+
+<audio id="ambientAudio" loop>
+    <source id="audioSource" src="https://www.soundjay.com/nature/sounds/rain-01.mp3" type="audio/mpeg">
+</audio>
+<audio id="faahSound" src="https://www.myinstants.com/media/sounds/vine-boom.mp3"></audio>
+<audio id="dingSound" src="https://www.myinstants.com/media/sounds/correct-ding.mp3"></audio>
+
+<div class="scene-container">
+    <div class="cafe-scene"><div class="coffee-cup">☕</div><div class="steam"></div><div class="steam"></div></div>
+    <div class="forest-scene"><div class="firefly"></div><div class="grass">🌿</div><div class="grass2">🌱</div></div>
+    <div class="night-scene"><div class="star star1"></div><div class="star star2"></div><div class="star star3"></div><div class="owl">🦉</div></div>
+</div>
+
+<div class="container">
+    <div class="header">
+        <div>
+            <h1><span id="headerIcon">🪺</span> CozyAI</h1>
+            <p class="subtitle">Breathe. Focus. Let's conquer this study session together.</p>
+        </div>
+        <div class="controls-group">
+            <div class="color-picker-wrapper" title="Make it your favorite color!">
+                🎨 <input type="color" id="accentColor" value="#d4a373" onchange="changeAccentColor(this.value)">
+            </div>
+            <div class="vibe-selector">
+                <button class="vibe-btn active" onclick="setTheme('cafe', this)">☕ Cafe</button>
+                <button class="vibe-btn" onclick="setTheme('forest', this)">🌲 Forest</button>
+                <button class="vibe-btn" onclick="setTheme('night', this)">🌙 Night</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('focus', this)">🧘 Focus & Goals</button>
+        <button class="tab-btn" onclick="switchTab('study', this)">📚 Study & Tutor</button>
+        <button class="tab-btn" onclick="switchTab('exam', this)">🎯 Exam Prep</button>
+    </div>
+
+    <div id="tab-focus" class="tab-content active layout-2col">
+        <div class="panel">
+            <div class="timer-card" style="padding: 0;">
+                <div class="timer-mode mode-focus" id="timerMode">Focus Time</div>
+                <div class="timer-display" id="timerDisplay">25:00</div>
+                <div style="display: flex; gap: 10px; width: 100%; max-width: 300px; margin-bottom: 15px;">
+                    <input type="number" id="customTimeInput" placeholder="Mins" min="1" max="120" style="margin-bottom: 0; text-align: center;">
+                    <button class="action-btn" style="width: auto; padding: 0 20px;" onclick="setCustomTime()">Set</button>
+                </div>
+                <div class="timer-controls" style="margin: 0 auto;">
+                    <button class="btn-timer btn-start" id="startBtn" onclick="toggleTimer()">Start</button>
+                    <button class="btn-timer btn-reset" onclick="resetTimer()">Reset</button>
+                </div>
+            </div>
+            <div class="ambient-box" style="margin-top: 25px;">
+                <button class="sound-btn" id="soundBtn" onclick="toggleSound()">🎵 Play Focus Sound</button>
+                <div id="mantraDisplay">"You are capable of amazing things."</div>
+                <input type="text" id="mantraInput" placeholder="Type your own study mantra..." style="margin-top: 15px; margin-bottom: 0; padding: 10px;" onkeypress="handleMantraEnter(event)">
+            </div>
+        </div>
+        <div class="panel">
+            <h3>📈 My Study Goals</h3>
+            <div class="progress-container">
+                <span id="progressText">0% Completed</span>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
+            </div>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <input type="text" id="newGoalInput" placeholder="Add a topic to study..." style="margin-bottom: 0;" onkeypress="handleGoalEnter(event)">
+                <button class="action-btn" style="width: auto; padding: 0 20px;" onclick="addGoal()">Add</button>
+            </div>
+            <ul class="goal-list" id="goalList">
+                <li><label><input type="checkbox" onchange="updateProgress()"> Data Structures</label> <button class="delete-btn" onclick="deleteGoal(this)">X</button></li>
+                <li><label><input type="checkbox" onchange="updateProgress()"> Algorithms</label> <button class="delete-btn" onclick="deleteGoal(this)">X</button></li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="tab-study" class="tab-content layout-2col">
+        <div class="panel">
+            <h3>📄 Notes & Context</h3>
+            
+            <div class="upload-btn-wrapper">
+                <button class="btn-upload">📁 Upload Study PDF / Slides</button>
+                <input type="file" id="studyPdfUpload" accept=".pdf" onchange="extractPDF(this, 'pdfContext')" />
+            </div>
+
+            <textarea id="pdfContext" placeholder="Or paste text from your textbook/PDF here..." style="height: 200px;"></textarea>
+            <div style="display:flex; gap:10px;">
+                <button class="action-btn" onclick="generate('flashcard')" style="background: var(--secondary); color: var(--text-main);">🗂️ Flashcards</button>
+                <button class="action-btn" onclick="generate('quiz')">📝 Quiz</button>
+            </div>
+            <div id="outputArea"></div>
+        </div>
+        <div class="panel">
+            <h3>🤖 Ask the AI Tutor</h3>
+            <div class="chat-history" id="chatHistory">
+                <div class="message msg-ai">Hi! Upload a PDF on the left, then ask me any question about them. I'm here to help! 🎓</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="Ask a question..." onkeypress="handleEnter(event)">
+                <button onclick="sendChatMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-exam" class="tab-content layout-2col">
+        <div class="panel">
+            <h3>📝 Exam Generator</h3>
+            
+            <div class="upload-btn-wrapper">
+                <button class="btn-upload">📁 Upload Past Exam PDF</button>
+                <input type="file" id="examPdfUpload" accept=".pdf" onchange="extractPDF(this, 'pyqInput')" />
+            </div>
+
+            <textarea id="pyqInput" placeholder="Or paste your past exam questions here..."></textarea>
+            <input type="text" id="examTopic" placeholder="Topic (e.g., Algorithms)">
+            <button class="action-btn" onclick="generateExam()">🎯 Start Practice Exam</button>
+        </div>
+        <div class="panel">
+            <h3>🎯 Interactive Practice</h3>
+            <div id="examSetup" style="text-align: center; margin-top: 50px;">
+                <p style="color: var(--text-light);">Your interactive exam will appear here...</p>
+            </div>
+            
+            <div id="examOutput" style="display: none;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-weight: 800; color: var(--primary);">
+                    <span id="questionCounter">Question 1 of 5</span>
+                    <span id="scoreCounter">Score: 0</span>
+                </div>
+                <p id="questionText" style="font-weight: 800; font-size: 18px; margin-bottom: 20px;"></p>
+                <div id="optionsContainer"></div>
+                <p id="examFeedback" style="font-weight: 800; text-align: center; margin-top: 15px; min-height: 24px;"></p>
+                
+                <button class="action-btn" id="nextQuestionBtn" style="display: none; margin-top: 20px; background: var(--success);" onclick="nextQuestion()">Next Question ➡️</button>
+            </div>
+
+            <div id="examFinished" style="display: none; text-align: center; margin-top: 50px;">
+                <h2 style="color: var(--primary); font-size: 2rem;">Exam Complete! 🎉</h2>
+                <p id="finalScore" style="font-size: 1.5rem; font-weight: 800;"></p>
+                <button class="action-btn" style="margin-top: 20px;" onclick="resetExam()">Take Another Exam</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    async function extractPDF(input, targetId) {
+        const file = input.files[0];
+        if (!file) return;
+        const targetBox = document.getElementById(targetId);
+        targetBox.value = "⏳ Extracting text from PDF... Please wait.";
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+            let fullText = "";
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                const pageText = textContent.items.map(item => item.str).join(" ");
+                fullText += pageText + "\n";
+            }
+            targetBox.value = fullText.substring(0, 5000); 
+        } catch (error) {
+            targetBox.value = "Error reading PDF. Please try pasting the text manually.";
+            console.error(error);
+        }
+    }
+
+    function switchTab(tabId, btnElement) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('tab-' + tabId).classList.add('active');
+        btnElement.classList.add('active');
+    }
+
+    function setTheme(themeName, btnElement) {
+        document.body.className = 'theme-' + themeName;
+        document.querySelectorAll('.vibe-btn').forEach(btn => btn.classList.remove('active'));
+        btnElement.classList.add('active');
+        const headerIcon = document.getElementById('headerIcon');
+        const audioSource = document.getElementById('audioSource');
+        if (themeName === 'cafe') { headerIcon.innerText = '🪺'; document.getElementById('accentColor').value = '#d4a373'; audioSource.src = "https://www.soundjay.com/nature/sounds/rain-01.mp3"; }
+        if (themeName === 'forest') { headerIcon.innerText = '🍃'; document.getElementById('accentColor').value = '#5c8d68'; audioSource.src = "https://www.soundjay.com/nature/sounds/river-1.mp3"; }
+        if (themeName === 'night') { headerIcon.innerText = '🌙'; document.getElementById('accentColor').value = '#8b7cf6'; audioSource.src = "https://www.soundjay.com/nature/sounds/fire-burning.mp3"; }
+        document.documentElement.style.removeProperty('--primary');
+        document.documentElement.style.removeProperty('--primary-hover');
+        const audio = document.getElementById('ambientAudio');
+        if (!audio.paused) { audio.load(); audio.play().catch(e => console.log("Audio play blocked:", e)); }
+    }
+
+    function changeAccentColor(color) {
+        document.documentElement.style.setProperty('--primary', color);
+        document.documentElement.style.setProperty('--primary-hover', color + 'cc'); 
+    }
+
+    const audio = document.getElementById('ambientAudio');
+    const soundBtn = document.getElementById('soundBtn');
+    let isPlaying = false;
+    function toggleSound() {
+        if (isPlaying) { audio.pause(); soundBtn.innerText = "🎵 Play Focus Sound"; soundBtn.classList.remove('playing'); }
+        else { audio.volume = 1.0; audio.load(); audio.play().catch(e => console.log("Audio play blocked:", e)); soundBtn.innerText = "⏸ Pause Sound"; soundBtn.classList.add('playing'); }
+        isPlaying = !isPlaying;
+    }
+
+    function playFaah() { document.getElementById('faahSound').play(); }
+    function playDing() { document.getElementById('dingSound').play(); }
+
+    function handleMantraEnter(e) { if (e.key === 'Enter') { const text = e.target.value.trim(); if (text) { document.getElementById('mantraDisplay').innerText = `"${text}"`; e.target.value = ''; } } }
+
+    let timer, isRunning = false, timeLeft = 25 * 60, isFocusMode = true;
+    const display = document.getElementById('timerDisplay');
+    const modeLabel = document.getElementById('timerMode');
+    const startBtn = document.getElementById('startBtn');
+    function updateDisplay() { const m = Math.floor(timeLeft / 60), s = timeLeft % 60; display.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`; }
+    function setCustomTime() {
+        const input = document.getElementById('customTimeInput'); const mins = parseInt(input.value);
+        if (mins && mins > 0 && mins <= 120) {
+            clearInterval(timer); isRunning = false; isFocusMode = true; timeLeft = mins * 60;
+            startBtn.textContent = "Start"; modeLabel.textContent = "Focus Time"; modeLabel.className = "timer-mode mode-focus"; updateDisplay(); input.value = '';
+        } else { alert("Please enter a number between 1 and 120."); }
+    }
+    function toggleTimer() {
+        if (isRunning) { clearInterval(timer); startBtn.textContent = "Resume"; isRunning = false; }
+        else {
+            isRunning = true; startBtn.textContent = "Pause";
+            timer = setInterval(() => {
+                timeLeft--; updateDisplay();
+                if (timeLeft <= 0) {
+                    clearInterval(timer); isRunning = false;
+                    if (isFocusMode) { alert("🎉 Focus complete! Time for a 5-minute break."); isFocusMode = false; timeLeft = 5 * 60; modeLabel.textContent = "Break Time"; modeLabel.className = "timer-mode mode-break"; }
+                    else { alert("⏰ Break over! Ready to focus?"); isFocusMode = true; timeLeft = 25 * 60; modeLabel.textContent = "Focus Time"; modeLabel.className = "timer-mode mode-focus"; }
+                    startBtn.textContent = "Start"; updateDisplay();
+                }
+            }, 1000);
+        }
+    }
+    function resetTimer() { clearInterval(timer); isRunning = false; isFocusMode = true; timeLeft = 25 * 60; startBtn.textContent = "Start"; modeLabel.textContent = "Focus Time"; modeLabel.className = "timer-mode mode-focus"; updateDisplay(); }
+
+    function addGoal() {
+        const input = document.getElementById('newGoalInput'); const text = input.value.trim(); if (!text) return;
+        const li = document.createElement('li'); li.innerHTML = `<label><input type="checkbox" onchange="updateProgress()"> ${text}</label> <button class="delete-btn" onclick="deleteGoal(this)">X</button>`;
+        document.getElementById('goalList').appendChild(li); input.value = ''; updateProgress();
+    }
+    function handleGoalEnter(e) { if (e.key === 'Enter') addGoal(); }
+    function deleteGoal(btn) { btn.parentElement.remove(); updateProgress(); }
+    function updateProgress() {
+        const listItems = document.querySelectorAll('#goalList li');
+        if (listItems.length === 0) { document.getElementById('progressBar').style.width = '0%'; document.getElementById('progressText').innerText = '0% Completed'; return; }
+        const checked = document.querySelectorAll('#goalList input[type="checkbox"]:checked').length;
+        const percentage = Math.round((checked / listItems.length) * 100);
+        document.getElementById('progressBar').style.width = percentage + '%'; document.getElementById('progressText').innerText = percentage + '% Completed';
+        listItems.forEach(li => { const cb = li.querySelector('input[type="checkbox"]'); if (cb.checked) li.classList.add('completed'); else li.classList.remove('completed'); });
+    }
+
+    async function callAI(prompt) {
+        let response;
+        if (window.location.protocol === 'file:') {
+            response = await fetch("http://localhost:11434/api/generate", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ model: "gemma4:e2b", prompt: prompt, stream: false })
+            });
+            const data = await response.json(); return data.response;
+        } else {
+            response = await fetch("/api/chat", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt: prompt })
+            });
+            const data = await response.json(); return data.result;
+        }
+    }
+
+    async function generate(mode) {
+        const inputText = document.getElementById('pdfContext').value; const outputDiv = document.getElementById('outputArea');
+        if (!inputText.trim()) { alert("Please upload a PDF or paste some text first!"); return; }
+        outputDiv.innerText = "⏳ Thinking..."; outputDiv.style.display = 'block';
+        let prompt = mode === 'flashcard' ? `Generate 3 study flashcards. Format: FRONT: [Term]\nBACK: [Definition]\n\nText: "${inputText}"` : `Generate a 3-question multiple-choice quiz. Include the correct answer at the end.\n\nText: "${inputText}"`;
+        try {
+            outputDiv.innerText = await callAI(prompt);
+        } catch (error) { outputDiv.innerText = "Error connecting to AI."; }
+    }
+
+    async function sendChatMessage() {
+        const chatInput = document.getElementById('chatInput'); const chatHistory = document.getElementById('chatHistory');
+        const pdfContext = document.getElementById('pdfContext').value; const userText = chatInput.value.trim(); if (!userText) return;
+        chatHistory.innerHTML += `<div class="message msg-user">${userText}</div>`; chatInput.value = '';
+        const aiMsgDiv = document.createElement('div'); aiMsgDiv.className = 'message msg-ai'; aiMsgDiv.innerText = "Thinking..."; chatHistory.appendChild(aiMsgDiv); chatHistory.scrollTop = chatHistory.scrollHeight;
+        let prompt = `You are a friendly tutor. Keep answers short and clear.`; if (pdfContext.trim()) prompt += `\n\nContext:\n"${pdfContext}"\n\n`; prompt += `\nQuestion: "${userText}"`;
+        try { aiMsgDiv.innerText = await callAI(prompt); } catch (error) { aiMsgDiv.innerText = "Error connecting to AI."; }
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+    function handleEnter(e) { if (e.key === 'Enter') sendChatMessage(); }
+
+    let currentExamData = [];
+    let currentQuestionIndex = 0;
+    let currentScore = 0;
+
+    async function generateExam() {
+        const pyqText = document.getElementById('pyqInput').value; 
+        const topic = document.getElementById('examTopic').value; 
+        
+        if (!pyqText.trim() || !topic.trim()) { alert("Please upload a PDF or paste PYQs and enter a topic!"); return; }
+        
+        document.getElementById('examSetup').style.display = 'none';
+        document.getElementById('examFinished').style.display = 'none';
+        document.getElementById('examOutput').style.display = 'block';
+        document.getElementById('questionText').innerText = "⏳ AI is generating your 5-question exam... (This takes a few seconds)";
+        document.getElementById('optionsContainer').innerHTML = '';
+        document.getElementById('examFeedback').innerText = '';
+        document.getElementById('nextQuestionBtn').style.display = 'none';
+
+        const prompt = `You are an exam generator. Based on this text: "${pyqText}", create a 5-question multiple-choice quiz about "${topic}". 
+        You MUST reply ONLY with a valid JSON array of objects, no markdown, no extra text. Format: 
+        [
+          {"question": "Q1 text?", "options": ["A) 1", "B) 2", "C) 3", "D) 4"], "answer": "A) 1"},
+          {"question": "Q2 text?", "options": ["A) 1", "B) 2", "C) 3", "D) 4"], "answer": "B) 2"}
+        ]`;
+
+        try {
+            let result = await callAI(prompt);
+            result = result.replace(/```json/g, '').replace(/```/g, '').trim();
+            
+            const startIdx = result.indexOf('[');
+            const endIdx = result.lastIndexOf(']');
+            if (startIdx !== -1 && endIdx !== -1) {
+                result = result.substring(startIdx, endIdx + 1);
+            }
+
+            currentExamData = JSON.parse(result);
+            currentQuestionIndex = 0;
+            currentScore = 0;
+            
+            showQuestion();
+        } catch (error) {
+            document.getElementById('questionText').innerText = "Error generating exam. The AI might be too small to format JSON correctly. Try clicking 'Start' again.";
+            console.log(error);
+        }
+    }
+
+    function showQuestion() {
+        if (currentQuestionIndex >= currentExamData.length) {
+            document.getElementById('examOutput').style.display = 'none';
+            document.getElementById('examFinished').style.display = 'block';
+            document.getElementById('finalScore').innerText = `You scored ${currentScore} out of ${currentExamData.length}!`;
+            return;
+        }
+
+        const qData = currentExamData[currentQuestionIndex];
+        
+        document.getElementById('questionCounter').innerText = `Question ${currentQuestionIndex + 1} of ${currentExamData.length}`;
+        document.getElementById('scoreCounter').innerText = `Score: ${currentScore}`;
+        document.getElementById('questionText').innerText = qData.question;
+        document.getElementById('examFeedback').innerText = '';
+        document.getElementById('nextQuestionBtn').style.display = 'none';
+
+        const optionsContainer = document.getElementById('optionsContainer');
+        optionsContainer.innerHTML = '';
+        
+        qData.options.forEach(option => {
+            const btn = document.createElement('div');
+            btn.className = 'quiz-option';
+            btn.innerText = option;
+            btn.onclick = () => checkAnswer(btn, option, qData.answer, optionsContainer);
+            optionsContainer.appendChild(btn);
+        });
+    }
+
+        function checkAnswer(clickedBtn, selectedOption, correctAnswer, container) {
+        // Disable all options
+        Array.from(container.children).forEach(btn => btn.style.pointerEvents = 'none');
+        
+        // MAGIC FIX: We check if the correct answer starts with the same letter (A, B, C, D)
+        const selectedLetter = selectedOption.trim().charAt(0).toUpperCase();
+        const correctLetter = correctAnswer.trim().charAt(0).toUpperCase();
+        
+        const isCorrect = (selectedOption === correctAnswer) || (selectedLetter === correctLetter);
+
+        if (isCorrect) {
+            clickedBtn.classList.add('correct');
+            document.getElementById('examFeedback').innerText = "Correct! 🎉";
+            document.getElementById('examFeedback').style.color = "var(--success)";
+            currentScore++;
+            playDing();
+        } else {
+            clickedBtn.classList.add('wrong');
+            document.getElementById('examFeedback').innerText = "FAAAH! Wrong answer. 😭";
+            document.getElementById('examFeedback').style.color = "var(--danger)";
+            playFaah(); 
+            
+            // Highlight the correct answer in green
+            Array.from(container.children).forEach(btn => {
+                const btnLetter = btn.innerText.trim().charAt(0).toUpperCase();
+                if (btn.innerText === correctAnswer || btnLetter === correctLetter) {
+                    btn.classList.add('correct');
+                }
+            });
+        }
+        
+        document.getElementById('scoreCounter').innerText = `Score: ${currentScore}`;
+        document.getElementById('nextQuestionBtn').style.display = 'block';
+    }
+    
+
+    function nextQuestion() {
+        currentQuestionIndex++;
+        showQuestion();
+    }
+
+    function resetExam() {
+        document.getElementById('examFinished').style.display = 'none';
+        document.getElementById('examSetup').style.display = 'block';
+        document.getElementById('pyqInput').value = '';
+        document.getElementById('examTopic').value = '';
+    }
+    
+    updateProgress();
+</script>
+</body>
+</html>
